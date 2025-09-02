@@ -211,4 +211,13 @@ public class StudentService {
         session.close();
     }
 
+    //hibernate life cycle
+
+    // new instance = transient state
+    // save(), persist(), update() = persistent state
+    // detach(), close()- not managed by session
+    // save(), merge() - from detached to persistent state
+    // session.remove() - removed state
+
+
 }
