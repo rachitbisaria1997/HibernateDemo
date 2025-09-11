@@ -1,0 +1,95 @@
+ORM (Object Relational Mapping) is a technique where Java objects (POJOs) are mapped to database tables, and object fields are mapped to table columns.
+
+Instead of writing SQL manually, the ORM framework handles it for you.
+
+Each entity class (POJO) ↔ Table in DB.
+
+Each field/property ↔ Column in DB.
+
+Relationships (OneToOne, OneToMany, ManyToMany) are mapped using annotations/XML.
+
+Hibernate automatically generates SQL (INSERT, UPDATE, SELECT, DELETE) behind the scenes.
+
+import jakarta.persistence.*;
+
+Step 1: POJO (Entity Class)
+
+@Entity
+@Table(name = "employee")
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;  // primary key
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "salary")
+    private double salary;
+
+    // Constructors
+    public Employee() {}
+    public Employee(String name, double salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+
+    // Getters & Setters
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public double getSalary() { return salary; }
+    public void setSalary(double salary) { this.salary = salary; }
+}
+
+SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+        // Open a session
+Session session = factory.openSession();
+Transaction tx = session.beginTransaction();
+
+        // Create employee object
+Employee employeeObj = new Employee("Alice", 85000.00);
+session.save(employeeObj);
+
+tx.commit();
+factory.close();
+
+when we call session.save(employeeObj);
+behind the scene it calls SQL query insert into employee (name, salary) values ('Alice', 85000.00);
+
+
+Hibernate caching levels.
+
+1. First level - session cache
+Each session keeps a cache of objects it has already loaded.
+If the same entity is requested again in the same session, Hibernate returns it from cache instead of hitting the DB.
+
+
+Session session = factory.openSession();
+Employee emp1 = session.get(Employee.class, 1); // DB Hit
+Employee emp2 = session.get(Employee.class, 1); // Cached (No DB Hit)
+
+2. 2nd level - sessionfactory cache
+Helps when the same data is needed across different sessions. If multiple users request the same employee record,
+Hibernate fetches it once from DB and then serves it from second-level cache for subsequent requests.
+
+3. Query cache - caches the result of query not just the entity. its useful for repeated queries with diff params
+
+enable it <property name="hibernate.cache.use_query_cache">true</property>
+
+List<Employee> employees = session.createQeury("select * from Employee").setCacheable(true).list();
+
+
+JDBC vs Hibernate
+
+You write SQL manually (INSERT, UPDATE, SELECT …).
+Each query hits the database directly (no cache)
+
+While in hibernate, reduces the boiler plate code
+
+first level - helps in avoiding duplicate queries in same session. shared across sessions, reducing repeted DB hits
+
+
+
