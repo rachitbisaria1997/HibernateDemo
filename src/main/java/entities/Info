@@ -91,5 +91,79 @@ While in hibernate, reduces the boiler plate code
 
 first level - helps in avoiding duplicate queries in same session. shared across sessions, reducing repeted DB hits
 
+Q. lazy loading in hibernate
 
+@Entity
+public class Department{
+
+    @OneToMany(mappedBy = "department",fetch = FetchType.LAZY)
+    private List<Employee> employees;
+
+   public List<Employee> getEmployees()
+   {
+	return employees;
+   }
+
+}
+
+
+Session session = sessionFactory.openSession();
+
+session.beginTransaction();
+
+
+Department dept = session.get(Department.class, 1L);
+
+// At this point, only the department data is fetched.
+// No query is executed to load employees yet.
+
+List<Employee> list = dept.getEmployees();
+
+//// Now, when we access getEmployees(),
+// Hibernate executes a separate SQL query to fetch the employees.
+
+
+for(Employee emp : list)
+{
+	SOP(emp.getName());
+}
+
+session.getTransaction().commit();
+session.close();
+
+@Entity
+public class Department {
+
+    @OneToMany(mappedBy = "department", fetch = FetchType.EAGER)
+    private List<Employee> employees;
+}
+
+Session session = sessionFactory.openSession();
+session.beginTransaction();
+
+
+Department dept = session.get(Department.class, 1L);
+// At this point, Hibernate executes the following:
+// SELECT * FROM Department WHERE id = 1
+// AND immediately also:
+// SELECT * FROM Employee WHERE department_id = 1
+
+// All data (department + employees) is fetched eagerly upfront.
+
+List<Employee> list = dept.getEmployees();
+for (Employee emp : list) {
+    System.out.println(emp.getName());
+}
+
+session.getTransaction().commit();
+session.close();
+
+LazyInitializationException
+
+We try to access a lazy-loaded collection/entity outside of a Hibernate session.
+
+Session session = sessionFactory.openSession();
+Employee emp = session.get(Employee.class, id);
+session.close();
+emp.getDepartment().getName();  //
 
